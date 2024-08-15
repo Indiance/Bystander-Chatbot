@@ -1,0 +1,5 @@
+.env
+model/
+magazine.txt
+pyrightconfig.json
+.DS_Store
