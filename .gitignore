@@ -1,5 +1,5 @@
 .env
-model/
-magazine.txt
+bystander/
 pyrightconfig.json
 .DS_Store
+bystander_index.pkl

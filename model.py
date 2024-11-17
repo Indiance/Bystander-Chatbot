@@ -1,7 +1,6 @@
 import os
 from dotenv import load_dotenv
 from llama_index.llms.azure_openai import AzureOpenAI
-from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
 import pickle
 from llama_index.core import Settings
 import streamlit as st
@@ -11,9 +10,9 @@ import time
 @st.cache_resource
 def load_env_vars():
     load_dotenv()
-    api_key = os.getenv("OPENAI_API_KEY")
-    azure_endpoint = os.getenv("OPENAI_API_ENDPOINT")
-    api_version = os.getenv("OPENAI_API_VERSION")
+    api_key = os.getenv("AZURE_OPENAI_API_KEY")
+    azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+    api_version = os.getenv("AZURE_OPENAI_API_VERSION")
     print("env variables successfully loaded")
     return api_key, azure_endpoint, api_version
 
@@ -21,7 +20,7 @@ api_key, azure_endpoint, api_version = load_env_vars()
 
 # Initialize LLM and embedding models
 @st.cache_resource
-def initialize_models(api_key, azure_endpoint, api_version):
+def initialize_llm(api_key, azure_endpoint, api_version):
     llm = AzureOpenAI(
         model="gpt-35-turbo-16k",
         deployment_name="bystander-rag-model",
@@ -30,18 +29,10 @@ def initialize_models(api_key, azure_endpoint, api_version):
         api_version=api_version,
     )
 
-    embed_model = AzureOpenAIEmbedding(
-        model="text-embedding-3-large",
-        deployment_name="bystander-embedding-model",
-        api_key=api_key,
-        azure_endpoint=azure_endpoint,
-        api_version=api_version,
-    )
     Settings.llm = llm
-    Settings.embed_model = embed_model
-    return llm, embed_model
+    return llm
 
-llm, embed_model = initialize_models(api_key, azure_endpoint, api_version)
+llm = initialize_llm(api_key, azure_endpoint, api_version)
 
 # Load pickle file
 @st.cache_resource
@@ -56,15 +47,15 @@ query_engine = load_index()
 
 st.header("Chat with the Bystander 💬 📚")
 
-if "messages" not in st.session_state.keys(): # Initialize the chat message history
+if "messages" not in st.session_state.keys():
     st.session_state.messages = [
         {"role": "assistant", "content": "Ask me a question about the Bystander!"}
     ]
 
-if prompt := st.chat_input("Your question"): # Prompt for user input and save to chat history
+if prompt := st.chat_input("Your question"):
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-for message in st.session_state.messages: # Display the prior chat messages
+for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
 
